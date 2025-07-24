@@ -10,5 +10,5 @@ idf_component_register(
         "ui_events.c"
     INCLUDE_DIRS
         .
-    REQUIRES lvgl
+    REQUIRES lvgl ui_interface
 )

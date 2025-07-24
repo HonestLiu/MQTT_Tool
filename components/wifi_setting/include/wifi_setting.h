@@ -8,8 +8,8 @@
 #include "esp_event.h"
 #include "esp_netif.h"
 
-#define WIFI_SSID      "Mi11Pro"         ///< WiFi SSID
-#define WIFI_PASS      "88888886"             ///< WiFi 密码
+#define WIFI_SSID      "My-WiFi"         ///< WiFi SSID
+#define WIFI_PASS      "roll991-arm5"             ///< WiFi 密码
 #define MAXIMUM_RETRY  5                 ///< 最大重连次数
 
 //--------------------------事件组和Tag定义--------------------------------
