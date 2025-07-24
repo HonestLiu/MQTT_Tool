@@ -119,6 +119,8 @@ bool ui_mqtt_publish(const char* topic, const char* payload, int qos) {
     // 安全地复制主题字符串
     strncpy(msg.data.publish_data.topic, topic,
             sizeof(msg.data.publish_data.topic) - 1);
+    strncpy(msg.data.publish_data.payload, payload,
+            sizeof(msg.data.publish_data.payload) - 1);
     msg.data.publish_data.topic[sizeof(msg.data.publish_data.topic) - 1] = '\0'; // 确保字符串以null结尾
     
     // 设置服务质量等级
@@ -128,9 +130,9 @@ bool ui_mqtt_publish(const char* topic, const char* payload, int qos) {
     bool result = send_ui_message(&msg);
 
     // 记录操作日志
-    ESP_LOGI(TAG, "UI发布MQTT消息: 主题=%s, QoS=%d, 结果=%s",
+    ESP_LOGI(TAG, "UI发布MQTT消息: 主题=%s, QoS=%d, 消息内容=%s, 结果=%s",
              msg.data.publish_data.topic, msg.data.publish_data.qos,
-             result ? "成功" : "失败");
+             msg.data.publish_data.payload, result ? "成功" : "失败");
     return result;
 }
 

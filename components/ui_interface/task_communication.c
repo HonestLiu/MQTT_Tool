@@ -21,7 +21,7 @@ void task_communication_init(void) {
   ESP_LOGI(TAG, "Start Init Task Communication");
 
   // 创建UI到主逻辑任务的信息队列
-  ui_to_logic_queue = xQueueCreate(10, sizeof(logic_to_ui_queue));
+  ui_to_logic_queue = xQueueCreate(10, sizeof(ui_to_logic_msg_t));
   if (ui_to_logic_queue == NULL) {
     ESP_LOGE(TAG, "创建ui_to_logic_queue失败-内存不足或参数错误");
   }

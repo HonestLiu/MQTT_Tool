@@ -215,7 +215,7 @@ esp_err_t bsp_display_backlight_off(void) {
  * @return esp_err_t 返回ESP_OK表示成功
  */
 esp_err_t bsp_display_backlight_on(void) {
-    return bsp_display_brightness_set(100);
+    return bsp_display_brightness_set(50);
 }
 
 /**

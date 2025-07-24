@@ -15,9 +15,10 @@
 #include "mqtt_tool.h"
 #include "ui.h"
 
+#include "mqtt_message_display.h"
+
 // 日志标签
 static const char* TAG = "MAIN_UPDATED";
-
 /**
  * @brief GUI任务函数
  * 该任务负责处理用户界面相关的操作和事件。
@@ -35,15 +36,21 @@ void gui_task(void* pvParameters) {
       switch (rec_msg.type) {
         case LOGIC_MSG_MQTT_STATUS:  // MQTT连接状态消息
           break;
-
         case LOGIC_MSG_MQTT_RECEIVED:  // 接收到的MQTT消息
+          ESP_LOGI(TAG, "Received MQTT message");
+          ESP_LOGI(TAG, "Topic: %s", rec_msg.data.mqtt_received.topic);
+          ESP_LOGI(TAG, "Payload: %s", rec_msg.data.mqtt_received.payload);
+          mqtt_display_add_message(rec_msg.data.mqtt_received.topic,
+                                    rec_msg.data.mqtt_received.payload,
+                                    rec_msg.data.mqtt_received.qos,
+                                    NULL);
           break;
         case LOGIC_MSG_MQTT_RESULT:  // MQTT操作结果消息
           break;
         case LOGIC_MSG_WIFI_STATUS:  // WiFi连接状态消息
           break;
         default:
-          ESP_LOGW(TAG, "Unknown message type");
+          ESP_LOGW(TAG, "Unknown message type=%d", rec_msg.type);
           break;
       }
     }
@@ -128,12 +135,19 @@ void main_logic_task(void* pvParmeters) {
               received_msg.data.subscribe_data.qos);
           // 处理订阅逻辑
           ESP_LOGI(TAG, "Subscribed to topic: %s", received_msg.data.subscribe_data.topic);
+          mqtt_display_add_system_msg("Subscribed to topic", "INFO");
           break;
 
         case UI_MSG_MQTT_PUBLISH:  // MQTT发布请求
-          ESP_LOGI(TAG, "Received MQTT publish request");
-          // 处理发布逻辑
-          break;
+            mqtt_tool_publish(
+                &mqtt_tool, 
+                received_msg.data.publish_data.topic, 
+                received_msg.data.publish_data.payload, 
+                received_msg.data.publish_data.qos);
+            ESP_LOGI(TAG, "Published message to topic: %s qos: %d", received_msg.data.publish_data.topic, received_msg.data.publish_data.qos);
+            // 处理发布逻辑
+            mqtt_display_add_system_msg("Published message to topic", "INFO");
+            break;
 
         case UI_MSG_WIFI_CONFIG:  // WiFi配置请求
           ESP_LOGI(TAG, "Received WiFi config request");

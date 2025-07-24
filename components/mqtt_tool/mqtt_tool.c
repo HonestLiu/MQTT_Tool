@@ -22,9 +22,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+#include "task_communication.h"
 
 /** @brief 日志标签 */
 static const char *TAG = "mqtt_tool";
+
+// 逻辑到UI的消息队列
+extern QueueHandle_t logic_to_ui_queue;
 
 /**
  * @brief 线程安全地设置MQTT连接状态
@@ -112,6 +116,29 @@ static void mqtt_tool_event_handler(void *handler_args, esp_event_base_t base, i
         }
         if (event->data && event->data_len > 0) {
             ESP_LOGI(TAG, "DATA=%.*s", event->data_len, event->data);
+            // 将接收到的消息发送到UI处理
+            if (logic_to_ui_queue != NULL) {
+                logic_to_ui_msg_t msg = {
+                    .type = LOGIC_MSG_MQTT_RECEIVED,
+                    .data = {},
+                };
+                
+                // 安全地复制topic，使用实际长度
+                int topic_copy_len = (event->topic_len < sizeof(msg.data.mqtt_received.topic) - 1) ? 
+                                    event->topic_len : sizeof(msg.data.mqtt_received.topic) - 1;
+                memcpy(msg.data.mqtt_received.topic, event->topic, topic_copy_len);
+                msg.data.mqtt_received.topic[topic_copy_len] = '\0';
+                
+                // 安全地复制payload，使用实际长度
+                int payload_copy_len = (event->data_len < sizeof(msg.data.mqtt_received.payload) - 1) ? 
+                                      event->data_len : sizeof(msg.data.mqtt_received.payload) - 1;
+                memcpy(msg.data.mqtt_received.payload, event->data, payload_copy_len);
+                msg.data.mqtt_received.payload[payload_copy_len] = '\0';
+                
+                // 发送到UI
+                ESP_LOGI(TAG, "Sending MQTT message to UI: topic=%s, payload=%s", msg.data.mqtt_received.topic, msg.data.mqtt_received.payload);
+                xQueueSend(logic_to_ui_queue, &msg, portMAX_DELAY);
+            }
         }
         break;
         

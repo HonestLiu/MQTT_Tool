@@ -13,6 +13,7 @@
 #include "freertos/task.h"
 #include "task_communication.h"
 #include "ui_interface.h"
+#include "mqtt_message_display.h"
 
 static const char *TAG = "main";
 
@@ -41,6 +42,8 @@ void hardware_init_task(void *pvParameters) {
 
     // 初始化UI
     ui_init();                                         ///< 初始化UI界面
+    mqtt_display_init(ui_reviceMsg,ui_MsgNum,ui_MqttState);                               ///< 初始化MQTT消息显示管理器
+    mqtt_display_add_system_msg("System initialized", "info");  ///< 添加系统初始化消息到显示管理器
 
     ESP_LOGI(TAG, "Hardware initialization completed successfully.");
 

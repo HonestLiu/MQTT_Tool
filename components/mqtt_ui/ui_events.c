@@ -7,15 +7,21 @@
 #include "task_communication.h"
 #include "ui.h"
 #include "ui_interface.h"
+#include "mqtt_message_display.h"
 
 static uint8_t rest;
 
 void on_clean_ricv_msg(lv_event_t* e) {
-  // Your code here
+   lv_event_code_t event_code = lv_event_get_code(e);
+    
+    if (event_code == LV_EVENT_CLICKED) {
+        mqtt_display_clear();
+        mqtt_display_add_system_msg("clear all messages", "INFO");
+    }
 }
 
 void mqtt_server_connect(lv_event_t* e) {
-  // Your code here
+  
   printf("Connecting to MQTT server\n");
 
   char* mqtt_server = lv_textarea_get_text(ui_MqttServerUrl);
@@ -46,9 +52,11 @@ void mqtt_server_connect(lv_event_t* e) {
     lv_obj_set_style_bg_color(ui_MqttDisconnect, lv_color_hex(0xF44336),
                               LV_PART_MAIN);
     lv_obj_clear_state(ui_MqttDisconnect, LV_STATE_DISABLED);
+	mqtt_display_add_system_msg("Connecting to MQTT server", "INFO");
   } else {
     // 连接失败
     lv_label_set_text(ui_MqttState, "Disconnected");
+	mqtt_display_add_system_msg("Connect to MQTT server failed","err");
   }
 }
 
@@ -62,6 +70,9 @@ void mqtt_server_disconnect(lv_event_t* e) {
   lv_obj_set_style_bg_color(ui_MqttConnect, lv_color_hex(0x2196F3),
                             LV_PART_MAIN);
   lv_obj_clear_state(ui_MqttConnect, LV_STATE_DISABLED);
+
+  lv_label_set_text(ui_MqttState, "Disconnected");
+  mqtt_display_add_system_msg("Disconnected from MQTT server", "INFO");
 }
 
 void on_clicked_server_set(lv_event_t* e) {
@@ -93,16 +104,27 @@ void mqtt_qos_value_change(lv_event_t* e) {
 }
 
 void mqtt_publish(lv_event_t* e) {
-  char qos_value[16];  // 获取QOS值的缓冲区
+  char qos_str[16];  // 获取QOS值的缓冲区
   char* mqtt_theme = lv_textarea_get_text(ui_MqttTheme);
   char* mqtt_msg = lv_textarea_get_text(ui_MqttPublicMsg);
-  lv_dropdown_get_selected_str(ui_MqttQos, qos_value, sizeof(qos_value));
+  int qos_num;
+
+  lv_dropdown_get_selected_str(ui_MqttQos, qos_str, sizeof(qos_str));
   if (mqtt_theme == NULL || mqtt_msg == NULL) {
     lv_label_set_text(ui_MqttState, "MQTT发布失败: 参数不能为空");
     return;
   }
-  printf("Publishing MQTT message to theme: %s msg: %s qos: %s\n", mqtt_theme,
-         mqtt_msg, qos_value);
+
+  if(sscanf(qos_str, "Qos %d", &qos_num) != 1 || qos_num < 0 || qos_num > 2) {
+	lv_label_set_text(ui_MqttState, "MQTT发布失败: Qos值无效");
+	return;
+  }
+
+  ui_mqtt_publish(mqtt_theme, mqtt_msg, qos_num);
+  printf("Publishing MQTT message to theme: %s msg: %s qos: %d\n", mqtt_theme,
+         mqtt_msg, qos_num);
+  lv_textarea_set_text(ui_MqttTheme, "");
+  lv_textarea_set_text(ui_MqttPublicMsg, "");
 }
 
 void sub_theme_input(lv_event_t* e) {
@@ -117,4 +139,5 @@ void sub_theme_btn(lv_event_t* e) {
   }
   ui_mqtt_subscribe(sub_theme, 0);
   printf("Subscribing to theme: %s\n", sub_theme);
+  lv_textarea_set_text(ui_SubscribeTheme, "");
 }
