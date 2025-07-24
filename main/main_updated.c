@@ -122,8 +122,12 @@ void main_logic_task(void* pvParmeters) {
 
           break;
         case UI_MSG_MQTT_SUBSCRIBE:  // MQTT订阅请求
-          ESP_LOGI(TAG, "Received MQTT subscribe request");
+          mqtt_tool_subscribe(
+              &mqtt_tool, 
+              received_msg.data.subscribe_data.topic, 
+              received_msg.data.subscribe_data.qos);
           // 处理订阅逻辑
+          ESP_LOGI(TAG, "Subscribed to topic: %s", received_msg.data.subscribe_data.topic);
           break;
 
         case UI_MSG_MQTT_PUBLISH:  // MQTT发布请求
@@ -144,3 +148,6 @@ void main_logic_task(void* pvParmeters) {
     vTaskDelay(pdMS_TO_TICKS(100));  // 延时10毫秒
   }
 }
+
+
+

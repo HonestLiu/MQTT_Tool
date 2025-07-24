@@ -112,8 +112,9 @@ void sub_theme_input(lv_event_t* e) {
 void sub_theme_btn(lv_event_t* e) {
   char* sub_theme = lv_textarea_get_text(ui_SubscribeTheme);
   if (sub_theme == NULL) {
-    lv_label_set_text(ui_MqttState, "订阅主题不能为空");
+    
     return;
   }
+  ui_mqtt_subscribe(sub_theme, 0);
   printf("Subscribing to theme: %s\n", sub_theme);
 }
