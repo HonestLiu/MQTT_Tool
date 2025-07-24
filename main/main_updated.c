@@ -46,6 +46,12 @@ void gui_task(void* pvParameters) {
                                     NULL);
           break;
         case LOGIC_MSG_MQTT_RESULT:  // MQTT操作结果消息
+          if (rec_msg.data.mqtt_result.success) {
+            ESP_LOGI(TAG, "MQTT operation succeeded");
+          } else {
+            ESP_LOGE(TAG, "MQTT operation failed: %s", rec_msg.data.mqtt_result.error_msg);
+            mqtt_display_add_system_msg(rec_msg.data.mqtt_result.error_msg, "ERROR");
+          }
           break;
         case LOGIC_MSG_WIFI_STATUS:  // WiFi连接状态消息
           break;
@@ -126,6 +132,27 @@ void main_logic_task(void* pvParmeters) {
           
           // 连接到 MQTT 代理服务器
           ret = mqtt_tool_connect(&mqtt_tool);
+           if (ret != MQTT_TOOL_SUCCESS) {
+               lv_label_set_text(ui_MqttState, "failed");
+               ESP_LOGE(TAG, "Failed to connect to MQTT broker: %s", full_broker_uri);
+              // mqtt_display_add_system_msg("Failed to connect to MQTT broker", "ERROR");
+               break;
+           } else {
+             // 连接成功
+               lv_label_set_text(ui_MqttState, "Connected");
+               // Connect按钮变绿色并禁用
+               lv_obj_set_style_bg_color(ui_MqttConnect, lv_color_hex(0x4CAF50),
+                                         LV_PART_MAIN);
+               lv_obj_add_state(ui_MqttConnect, LV_STATE_DISABLED);
+                   
+               // Disconnect按钮变红并启用
+               lv_obj_set_style_bg_color(ui_MqttDisconnect, lv_color_hex(0xF44336),
+                                         LV_PART_MAIN);
+               lv_obj_clear_state(ui_MqttDisconnect, LV_STATE_DISABLED);
+
+               ESP_LOGI(TAG, "Connected to MQTT broker: %s", full_broker_uri);
+               mqtt_display_add_system_msg("Connected to MQTT broker", "INFO");
+           }
 
           break;
         case UI_MSG_MQTT_SUBSCRIBE:  // MQTT订阅请求

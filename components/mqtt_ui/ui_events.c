@@ -40,7 +40,7 @@ void mqtt_server_connect(lv_event_t* e) {
   rest = ui_mqtt_connect(mqtt_server, atoi(mqtt_port), "mqtt_client", mqtt_user,
                          mqtt_passwd);
 
-  if (rest) {
+  /* if (rest) {
     // 连接成功
     lv_label_set_text(ui_MqttState, "Connecting");
     // Connect按钮变绿色并禁用
@@ -57,7 +57,7 @@ void mqtt_server_connect(lv_event_t* e) {
     // 连接失败
     lv_label_set_text(ui_MqttState, "Disconnected");
 	mqtt_display_add_system_msg("Connect to MQTT server failed","err");
-  }
+  } */
 }
 
 void mqtt_server_disconnect(lv_event_t* e) {

@@ -87,6 +87,21 @@ static void mqtt_tool_event_handler(void *handler_args, esp_event_base_t base, i
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         mqtt_tool_set_state(handle, MQTT_TOOL_STATE_CONNECTED);
+        
+        // 发送成功消息到UI
+        if (logic_to_ui_queue != NULL) {
+            logic_to_ui_msg_t msg = {
+                .type = LOGIC_MSG_MQTT_RESULT,
+                .data = {},
+            };
+            msg.data.mqtt_result.request_type = UI_MSG_MQTT_CONNECT;
+            msg.data.mqtt_result.success = true;
+            strncpy(msg.data.mqtt_result.error_msg, "MQTT connected successfully", 
+                   sizeof(msg.data.mqtt_result.error_msg) - 1);
+            msg.data.mqtt_result.error_msg[sizeof(msg.data.mqtt_result.error_msg) - 1] = '\0';
+            xQueueSend(logic_to_ui_queue, &msg, pdMS_TO_TICKS(100));
+        }
+        
         if (handle->connect_sem != NULL) {
             xSemaphoreGive(handle->connect_sem);
         }
@@ -145,12 +160,32 @@ static void mqtt_tool_event_handler(void *handler_args, esp_event_base_t base, i
     case MQTT_EVENT_ERROR:
         ESP_LOGE(TAG, "MQTT_EVENT_ERROR");
         mqtt_tool_set_state(handle, MQTT_TOOL_STATE_DISCONNECTED);
+        
+        // 发送错误消息到UI
+        if (logic_to_ui_queue != NULL) {
+            logic_to_ui_msg_t msg = {
+                .type = LOGIC_MSG_MQTT_RESULT,
+                .data = {},
+            };
+            msg.data.mqtt_result.request_type = UI_MSG_MQTT_CONNECT;
+            msg.data.mqtt_result.success = false;
+            strncpy(msg.data.mqtt_result.error_msg, "MQTT connection failed", 
+                   sizeof(msg.data.mqtt_result.error_msg) - 1);
+            msg.data.mqtt_result.error_msg[sizeof(msg.data.mqtt_result.error_msg) - 1] = '\0';
+            xQueueSend(logic_to_ui_queue, &msg, pdMS_TO_TICKS(100));
+        }
+        
         if (event->error_handle) {
             if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
                 ESP_LOGE(TAG, "TCP transport error: %d", event->error_handle->esp_transport_sock_errno);
             } else if (event->error_handle->error_type == MQTT_ERROR_TYPE_CONNECTION_REFUSED) {
                 ESP_LOGE(TAG, "Connection refused, return code: %d", event->error_handle->connect_return_code);
             }
+        }
+        
+        // 停止自动重连，避免无限重试
+        if (handle->client) {
+            esp_mqtt_client_stop(handle->client);
         }
         break;
         
@@ -192,8 +227,8 @@ uint8_t mqtt_tool_init(mqtt_tool_handle_t* handle)
             .address.uri = handle->config.broker_uri,
         },
         .network = {
-            .disable_auto_reconnect = false,
-            .timeout_ms = 5000,
+            .disable_auto_reconnect = true,  // 禁用自动重连，手动控制
+            .timeout_ms = 10000,             // 连接超时10秒
         },
         .session = {
             .keepalive = handle->config.keepalive,
