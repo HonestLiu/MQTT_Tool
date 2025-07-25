@@ -2,6 +2,8 @@
 
 一个基于ESP32-S3的MQTT客户端工具，具有LCD触摸屏界面，支持MQTT消息的发布、订阅和显示功能。
 
+<img src="./img/image-20250725093126776.png" style="zoom: 25%;" />
+
 ## 项目特性
 
 - 🖥️ **LCD触摸屏界面** - 基于LVGL的用户友好界面
@@ -9,6 +11,7 @@
 - 🔧 **模块化设计** - 组件化架构，易于扩展和维护
 - 📱 **实时消息显示** - 实时显示接收到的MQTT消息
 - ⚡ **高性能** - 基于FreeRTOS的多任务处理
+- 🛠️ **完整错误处理** - 包含连接失败、重连控制等错误处理机制
 
 ## 硬件要求
 
@@ -56,9 +59,9 @@
 ### 任务架构
 
 ```
-┌─────────────────┐    消息队列      ┌──────────────────┐
+┌─────────────────┐    消息队列    ┌──────────────────┐
 │   GUI Task      │ <─────────────→ │ Main Logic Task  │
-│  (界面处理)      │                  │   (业务逻辑)      │
+│  (界面处理)      │                 │   (业务逻辑)      │
 └─────────────────┘                 └──────────────────┘
          │                                   │
          ▼                                   ▼
@@ -133,7 +136,9 @@ idf.py -p /dev/ttyUSB0 monitor
 
 1. **设置MQTT服务器**
    - 在界面中输入MQTT broker地址
+   - 设置客户端ID（可选）
    - 输入用户名和密码（如需要）
+
 2. **连接到服务器**
    - 点击"Connect"按钮
    - 连接成功后按钮变绿并显示"Connected"状态
@@ -200,7 +205,13 @@ uint8_t mqtt_tool_deinit(mqtt_tool_handle_t* handle);
 
 ### WiFi配置
 
-wifi相关设置目前暂时硬编码在代码中，需手动去wifi-setting.h中修改
+在 `menuconfig` 中配置WiFi连接：
+
+```
+Example Configuration ->
+    WiFi SSID
+    WiFi Password
+```
 
 ### MQTT默认配置
 
@@ -209,6 +220,51 @@ wifi相关设置目前暂时硬编码在代码中，需手动去wifi-setting.h�
 #define MQTT_TOOL_DEFAULT_CLIENT_ID "esp32_mqtt_client"
 #define MQTT_TOOL_DEFAULT_KEEPALIVE 60
 ```
+
+## 故障排除
+
+### 常见问题
+
+1. **编译错误**
+   ```
+   解决方案：检查ESP-IDF版本是否正确，确保所有依赖已安装
+   ```
+
+2. **LCD显示异常**
+   ```
+   解决方案：检查SPI接线，确认LCD型号配置正确
+   ```
+
+3. **MQTT连接失败**
+   ```
+   解决方案：
+   - 检查WiFi连接状态
+   - 验证MQTT broker地址格式
+   - 确认防火墙设置
+   ```
+
+4. **触摸无响应**
+   ```
+   解决方案：检查I2C接线，确认触摸控制器地址配置
+   ```
+
+### 调试技巧
+
+1. **启用详细日志**
+   ```c
+   esp_log_level_set("*", ESP_LOG_VERBOSE);
+   ```
+
+2. **监控内存使用**
+   ```c
+   ESP_LOGI(TAG, "Free heap: %d", esp_get_free_heap_size());
+   ```
+
+3. **检查任务状态**
+   ```bash
+   # 在ESP-IDF监视器中
+   esp32> tasks
+   ```
 
 ## 贡献指南
 
@@ -232,7 +288,7 @@ wifi相关设置目前暂时硬编码在代码中，需手动去wifi-setting.h�
 ## 联系方式
 
 - **作者**: HonestLiu
-- **邮箱**: HonestLiu@outlook.com
+- **邮箱**: your.email@example.com
 - **项目地址**: https://github.com/HonestLiu/MQTT_Tool
 
 ## 致谢

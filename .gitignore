@@ -1,6 +1,84 @@
+# ESP-IDF Build files
 build/
 sdkconfig
 sdkconfig.old
+dependencies.lock
+
+# IDE files
 .vscode/
-.idea
+.idea/
+*.code-workspace
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+*~
+
+# Generated files
+*.bin
+*.elf
+*.map
+compile_commands.json
+
+# Python cache (if using Python scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Documentation build
+docs/_build/
+docs/html/
+docs/latex/
+
+# Test coverage
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
+# Package files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Editor backup files
+*~
+\#*\#
+.\#*
+
+# Tags
+tags
+TAGS
+
+# Certificates and keys (security)
+*.pem
+*.key
+*.crt
+*.p12
